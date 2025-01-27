@@ -1,6 +1,5 @@
 package com.safetica.safetica_backend.config;
 
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,14 +12,14 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // CSRF'yi devre dışı bırak
+            .csrf(csrf -> csrf.disable()) // CSRF korumasını devre dışı bırak
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS yapılandırmasını uygula
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll() // /api/auth/** yollarını herkese açık yap
-                .requestMatchers("/api/products/**").permitAll()
-                .anyRequest().authenticated() // Diğer yollar kimlik doğrulama gerektirir
+                .requestMatchers("/api/products/**").permitAll() // /api/products/** yollarını herkese açık yap
+                .anyRequest().authenticated() // Diğer tüm yollar kimlik doğrulama gerektirir
             );
 
         return http.build();
@@ -30,11 +29,13 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
+
+        config.setAllowCredentials(true); // Kimlik bilgilerine izin ver
         config.addAllowedOrigin("http://localhost:3000"); // React uygulamasının URL'si
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-        source.registerCorsConfiguration("/**", config);
+        config.addAllowedHeader("*"); // Tüm başlıklara izin ver
+        config.addAllowedMethod("*"); // Tüm HTTP metodlarına izin ver (GET, POST, PUT, DELETE, vb.)
+
+        source.registerCorsConfiguration("/**", config); // Tüm endpoint'lere CORS yapılandırmasını uygula
         return source;
     }
 }
