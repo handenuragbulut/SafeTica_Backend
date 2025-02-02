@@ -8,6 +8,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
+
 @Configuration
 public class SecurityConfig {
 
@@ -18,8 +20,9 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS yapılandırmasını uygula
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll() // /api/auth/** yollarını herkese açık yap
-                .requestMatchers("/api/products/**").permitAll() // /api/products/** yollarını herkese açık yap
-                .anyRequest().authenticated() // Diğer tüm yollar kimlik doğrulama gerektirir
+                .requestMatchers("/api/products/**").permitAll() // Ürün API'lerini herkese açık yap
+                .requestMatchers("/api/google-login").permitAll() // Google Login API'ye izin verildi
+                .anyRequest().authenticated() // Diğer yollar kimlik doğrulama gerektirir
             );
 
         return http.build();
@@ -30,12 +33,12 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowCredentials(true); // Kimlik bilgilerine izin ver
-        config.addAllowedOrigin("http://localhost:3000"); // React uygulamasının URL'si
-        config.addAllowedHeader("*"); // Tüm başlıklara izin ver
-        config.addAllowedMethod("*"); // Tüm HTTP metodlarına izin ver (GET, POST, PUT, DELETE, vb.)
-
-        source.registerCorsConfiguration("/**", config); // Tüm endpoint'lere CORS yapılandırmasını uygula
+        config.setAllowCredentials(true); // Çerezleri desteklemek için true
+        config.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // React uygulamasının URL'si
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        source.registerCorsConfiguration("/**", config);
+        
         return source;
     }
 }
