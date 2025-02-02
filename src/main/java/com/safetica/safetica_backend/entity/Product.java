@@ -38,12 +38,15 @@ public class Product {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    private String imageUrl; // Resim URL'si
+
+
     // Constructor'lar
     public Product() {
     }
 
     public Product(String name, String brand, String category, String subCategory, String description,
-                   String ingredients, String certifications, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                   String ingredients, String certifications, LocalDateTime createdAt, LocalDateTime updatedAt, String imageUrl) {
         this.name = name;
         this.brand = brand;
         this.category = category;
@@ -53,9 +56,21 @@ public class Product {
         this.certifications = certifications;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.imageUrl = imageUrl;
     }
 
+
     // Getter ve Setter'lar
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+
     public Long getId() {
         return id;
     }

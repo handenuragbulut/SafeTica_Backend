@@ -21,6 +21,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll() // /api/auth/** yollarını herkese açık yap
                 .requestMatchers("/api/products/**").permitAll() // Ürün API'lerini herkese açık yap
+                .requestMatchers("/api/google-login").permitAll() // Google Login API'ye izin verildi
                 .anyRequest().authenticated() // Diğer yollar kimlik doğrulama gerektirir
             );
 
