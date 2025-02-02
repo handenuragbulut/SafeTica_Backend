@@ -14,9 +14,9 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // CSRF'yi devre dışı bırak
+            .csrf(csrf -> csrf.disable()) // CSRF korumasını devre dışı bırak
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS yapılandırmasını uygula
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll() // /api/auth/** yollarını herkese açık yap
@@ -32,11 +32,13 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
+
         config.setAllowCredentials(true); // Çerezleri desteklemek için true
         config.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // React uygulamasının URL'si
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         source.registerCorsConfiguration("/**", config);
+        
         return source;
     }
 }
