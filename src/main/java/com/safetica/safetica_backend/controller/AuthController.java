@@ -34,6 +34,9 @@ public class AuthController {
     @Autowired
     private GoogleAuthService googleAuthService;
 
+    @Autowired
+    private com.safetica.safetica_backend.util.JwtUtil jwtUtil;
+
     /**
      * Kullanıcı giriş (email ve şifre ile)
      */
@@ -52,13 +55,14 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
             }
 
-            return ResponseEntity.ok("Login successful");
+            String token = jwtUtil.generateToken(user.getEmail());
+            return ResponseEntity.ok(token + "Login successful!");
+
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while logging in.");
         }
     }
-
 
     /**
      * Form ile kullanıcı kaydı
@@ -125,7 +129,9 @@ public class AuthController {
             // Kullanıcı Google ID ile veritabanında mevcut mu kontrol et
             Optional<User> userOptional = userService.findByGoogleId(googleUser.getGoogleId());
             if (userOptional.isPresent()) {
-                return ResponseEntity.ok("Login successful");
+                String token = jwtUtil.generateToken(googleUser.getEmail());
+                return ResponseEntity.ok(token + "Google Sign-In successful!");
+
             } else {
                 // Kullanıcı bulunamadıysa yeni bir kullanıcı oluştur
                 User newUser = new User();
@@ -135,49 +141,48 @@ public class AuthController {
                 newUser.setCreatedAt(LocalDateTime.now());
                 userService.saveUser(newUser);
 
-                return ResponseEntity.ok("Google Sign-Up successful!");
+                String token = jwtUtil.generateToken(newUser.getEmail());
+                return ResponseEntity.ok(token + "Google Sign-Up successful!");
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Google ID Token");
         }
     }
 
-
     /**
      * Google Callback Endpoint
      */
     @GetMapping("/google/callback")
-public void googleCallback(@RequestParam("id_token") String idToken, HttpServletResponse response) {
-    try {
-        // Google Token'ı doğrula ve kullanıcı bilgilerini al
-        GoogleUser googleUser = googleAuthService.decodeGoogleToken(idToken);
-
-        // Kullanıcı Google ID ile kontrol edilerek işlem yapılır
-        Optional<User> userOptional = userService.findByGoogleId(googleUser.getGoogleId());
-        if (userOptional.isPresent()) {
-            // Kullanıcı mevcutsa frontend'e başarılı giriş yönlendirmesi yapılır
-            response.sendRedirect("http://localhost:3000/home?status=success");
-        } else {
-            // Kullanıcı mevcut değilse yeni bir kullanıcı oluşturulur
-            User newUser = new User();
-            newUser.setEmail(googleUser.getEmail());
-            newUser.setGoogleId(googleUser.getGoogleId());
-            newUser.setAuthProvider("google");
-            newUser.setCreatedAt(LocalDateTime.now());
-            userService.saveUser(newUser);
-
-            // Yeni kullanıcı kaydedildiği bilgisiyle yönlendirme yapılır
-            response.sendRedirect("http://localhost:3000/home?status=new_user");
-        }
-    } catch (Exception e) {
-        // Hata durumunda login sayfasına hata mesajıyla yönlendirme yapılır
+    public void googleCallback(@RequestParam("id_token") String idToken, HttpServletResponse response) {
         try {
-            response.sendRedirect("http://localhost:3000/login?status=error");
-        } catch (IOException ex) {
-            ex.printStackTrace();
+            // Google Token'ı doğrula ve kullanıcı bilgilerini al
+            GoogleUser googleUser = googleAuthService.decodeGoogleToken(idToken);
+
+            // Kullanıcı Google ID ile kontrol edilerek işlem yapılır
+            Optional<User> userOptional = userService.findByGoogleId(googleUser.getGoogleId());
+            if (userOptional.isPresent()) {
+                // Kullanıcı mevcutsa frontend'e başarılı giriş yönlendirmesi yapılır
+                response.sendRedirect("http://localhost:3000/home?status=success");
+            } else {
+                // Kullanıcı mevcut değilse yeni bir kullanıcı oluşturulur
+                User newUser = new User();
+                newUser.setEmail(googleUser.getEmail());
+                newUser.setGoogleId(googleUser.getGoogleId());
+                newUser.setAuthProvider("google");
+                newUser.setCreatedAt(LocalDateTime.now());
+                userService.saveUser(newUser);
+
+                // Yeni kullanıcı kaydedildiği bilgisiyle yönlendirme yapılır
+                response.sendRedirect("http://localhost:3000/home?status=new_user");
+            }
+        } catch (Exception e) {
+            // Hata durumunda login sayfasına hata mesajıyla yönlendirme yapılır
+            try {
+                response.sendRedirect("http://localhost:3000/login?status=error");
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
     }
-}
-
 
 }
