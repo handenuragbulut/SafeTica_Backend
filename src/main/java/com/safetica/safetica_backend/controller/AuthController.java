@@ -2,6 +2,7 @@ package com.safetica.safetica_backend.controller;
 
 import com.safetica.safetica_backend.dto.LoginRequest;
 import com.safetica.safetica_backend.dto.RegisterRequest;
+import com.safetica.safetica_backend.dto.UserResponse;
 import com.safetica.safetica_backend.dto.GoogleLoginRequest;
 import com.safetica.safetica_backend.dto.GoogleUser;
 import com.safetica.safetica_backend.entity.User;
@@ -19,7 +20,9 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -41,7 +44,7 @@ public class AuthController {
      * Kullanıcı giriş (email ve şifre ile)
      */
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
             Optional<User> userOptional = userService.findByEmail(loginRequest.getEmail());
             if (userOptional.isEmpty()) {
@@ -55,12 +58,27 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
             }
 
+            // Token oluştur
             String token = jwtUtil.generateToken(user.getEmail());
-            return ResponseEntity.ok(token + "Login successful!");
+
+            // Kullanıcı bilgilerini DTO olarak hazırla
+            UserResponse response = new UserResponse();
+            response.setId(user.getId());
+            response.setEmail(user.getEmail());
+            response.setFirstName(user.getFirstName());
+            response.setLastName(user.getLastName());
+
+            // HashMap ile response oluştur
+            Map<String, Object> result = new HashMap<>();
+            result.put("token", token);
+            result.put("user", response);
+
+            return ResponseEntity.ok(result);
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while logging in.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while logging in.");
         }
     }
 
@@ -121,29 +139,44 @@ public class AuthController {
      * Google Login Endpoint
      */
     @PostMapping("/google-login")
-    public ResponseEntity<String> googleLogin(@RequestBody GoogleLoginRequest googleLoginRequest) {
+    public ResponseEntity<?> googleLogin(@RequestBody GoogleLoginRequest googleLoginRequest) {
         try {
             // Google token'ı doğrula ve kullanıcı bilgilerini al
             GoogleUser googleUser = googleAuthService.decodeGoogleToken(googleLoginRequest.getGoogleIdToken());
 
             // Kullanıcı Google ID ile veritabanında mevcut mu kontrol et
             Optional<User> userOptional = userService.findByGoogleId(googleUser.getGoogleId());
-            if (userOptional.isPresent()) {
-                String token = jwtUtil.generateToken(googleUser.getEmail());
-                return ResponseEntity.ok(token + "Google Sign-In successful!");
 
+            User user;
+            if (userOptional.isPresent()) {
+                user = userOptional.get();
             } else {
                 // Kullanıcı bulunamadıysa yeni bir kullanıcı oluştur
-                User newUser = new User();
-                newUser.setEmail(googleUser.getEmail());
-                newUser.setGoogleId(googleUser.getGoogleId());
-                newUser.setAuthProvider("google");
-                newUser.setCreatedAt(LocalDateTime.now());
-                userService.saveUser(newUser);
-
-                String token = jwtUtil.generateToken(newUser.getEmail());
-                return ResponseEntity.ok(token + "Google Sign-Up successful!");
+                user = new User();
+                user.setEmail(googleUser.getEmail());
+                user.setGoogleId(googleUser.getGoogleId());
+                user.setAuthProvider("google");
+                user.setCreatedAt(LocalDateTime.now());
+                userService.saveUser(user);
             }
+
+            // Token oluştur
+            String token = jwtUtil.generateToken(user.getEmail());
+
+            // User DTO oluştur
+            UserResponse response = new UserResponse();
+            response.setId(user.getId());
+            response.setEmail(user.getEmail());
+            response.setFirstName(user.getFirstName());
+            response.setLastName(user.getLastName());
+
+            // HashMap ile token + user bilgisi dön
+            Map<String, Object> result = new HashMap<>();
+            result.put("token", token);
+            result.put("user", response);
+
+            return ResponseEntity.ok(result);
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Google ID Token");
         }

@@ -2,29 +2,50 @@ package com.safetica.safetica_backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import com.safetica.safetica_backend.security.JwtFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import com.safetica.safetica_backend.util.JwtUtil;
+
 
 import java.util.Arrays;
 
 @Configuration
 public class SecurityConfig {
+    private final JwtUtil jwtUtil;
+    public SecurityConfig(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // CSRF korumasını devre dışı bırak
-            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS yapılandırmasını uygula
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // /api/auth/** yollarını herkese açık yap
-                .requestMatchers("/api/products/**").permitAll() // Ürün API'lerini herkese açık yap
-                .requestMatchers("/api/google-login").permitAll() // Google Login API'ye izin verildi
-                .requestMatchers("/api/ingredients/**").permitAll() //...ingredient sayfası için
-                .anyRequest().authenticated() // Diğer yollar kimlik doğrulama gerektirir
-            );
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/products/**").permitAll()
+                        .requestMatchers("/api/google-login").permitAll()
+                        .requestMatchers("/api/ingredients/**").permitAll()
+                        .requestMatchers("/api/profiles/**").permitAll()
+                        .requestMatchers("/api/favorites/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/favorites/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/error").permitAll()
+
+                        .requestMatchers("/api/saved-articles/**").permitAll()
+                        .requestMatchers("/api/scanning-history/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/profiles/{userId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/favorites/{userId}").permitAll()
+                        .anyRequest().authenticated());
+
+        // 🔒 JwtFilter ekleniyor
+        http.addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -39,7 +60,7 @@ public class SecurityConfig {
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         source.registerCorsConfiguration("/**", config);
-        
+
         return source;
     }
 }

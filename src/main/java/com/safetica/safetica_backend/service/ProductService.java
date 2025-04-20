@@ -8,6 +8,7 @@ import com.safetica.safetica_backend.repository.ProductRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 public class ProductService {
@@ -23,6 +24,9 @@ public class ProductService {
         return productRepository
                 .findByNameContainingIgnoreCaseOrBrandContainingIgnoreCaseOrCategoryContainingIgnoreCaseOrSubCategoryContainingIgnoreCase(
                         query, query, query, query);
+    }
+    public Optional<Product> getProductById(Long id) {
+        return productRepository.findById(id);
     }
 
     public List<Product> filterProducts(
