@@ -9,6 +9,7 @@ import com.safetica.safetica_backend.service.ProductService;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
@@ -46,6 +47,13 @@ public class ProductController {
             certifications.isEmpty() ? null : certifications
         );
         return ResponseEntity.ok(filteredProducts);
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+        return productService
+                .getProductById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
     
     
