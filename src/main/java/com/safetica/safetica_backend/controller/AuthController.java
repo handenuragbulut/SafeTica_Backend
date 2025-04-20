@@ -9,7 +9,6 @@ import com.safetica.safetica_backend.entity.User;
 import com.safetica.safetica_backend.service.GoogleAuthService;
 import com.safetica.safetica_backend.service.UserService;
 
-import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,12 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -41,7 +38,7 @@ public class AuthController {
     private com.safetica.safetica_backend.util.JwtUtil jwtUtil;
 
     /**
-     * Kullanıcı giriş (email ve şifre ile)
+     * Kullanıcı email & şifre ile giriş
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
@@ -52,23 +49,18 @@ public class AuthController {
             }
 
             User user = userOptional.get();
-
-            // Şifre doğrulama
             if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
             }
 
-            // Token oluştur
             String token = jwtUtil.generateToken(user.getEmail());
 
-            // Kullanıcı bilgilerini DTO olarak hazırla
             UserResponse response = new UserResponse();
             response.setId(user.getId());
             response.setEmail(user.getEmail());
             response.setFirstName(user.getFirstName());
             response.setLastName(user.getLastName());
 
-            // HashMap ile response oluştur
             Map<String, Object> result = new HashMap<>();
             result.put("token", token);
             result.put("user", response);
@@ -83,17 +75,15 @@ public class AuthController {
     }
 
     /**
-     * Form ile kullanıcı kaydı
+     * Kullanıcı kayıt
      */
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterRequest registerRequest) {
         try {
-            // Şifre eşleşmesini kontrol et
             if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
                 return ResponseEntity.badRequest().body("Passwords do not match!");
             }
 
-            // Zorunlu alanların kontrolü
             if (registerRequest.getFirstName() == null || registerRequest.getFirstName().isEmpty()) {
                 return ResponseEntity.badRequest().body("First name is required.");
             }
@@ -110,19 +100,18 @@ public class AuthController {
                 return ResponseEntity.badRequest().body("Country is required.");
             }
             if (!registerRequest.isTermsAccepted()) {
-                return ResponseEntity.badRequest().body("Terms and conditions must be accepted.");
+                return ResponseEntity.badRequest().body("Terms must be accepted.");
             }
 
-            // Yeni kullanıcı oluştur
             User user = new User();
             user.setFirstName(registerRequest.getFirstName());
             user.setLastName(registerRequest.getLastName());
             user.setEmail(registerRequest.getEmail());
-            user.setPasswordHash(passwordEncoder.encode(registerRequest.getPassword())); // Şifre hashleme
+            user.setPasswordHash(passwordEncoder.encode(registerRequest.getPassword()));
             user.setBirthDate((LocalDate) registerRequest.getBirthDate());
             user.setPhoneNumber(registerRequest.getPhoneNumber());
             user.setCountry(registerRequest.getCountry());
-            user.setAuthProvider("email"); // Form ile kayıt
+            user.setAuthProvider("email");
             user.setTermsAccepted(registerRequest.isTermsAccepted());
             user.setCreatedAt(LocalDateTime.now());
 
@@ -136,41 +125,32 @@ public class AuthController {
     }
 
     /**
-     * Google Login Endpoint
+     * Google ile giriş
      */
     @PostMapping("/google-login")
     public ResponseEntity<?> googleLogin(@RequestBody GoogleLoginRequest googleLoginRequest) {
         try {
-            // Google token'ı doğrula ve kullanıcı bilgilerini al
             GoogleUser googleUser = googleAuthService.decodeGoogleToken(googleLoginRequest.getGoogleIdToken());
 
-            // Kullanıcı Google ID ile veritabanında mevcut mu kontrol et
             Optional<User> userOptional = userService.findByGoogleId(googleUser.getGoogleId());
+            User user = userOptional.orElseGet(() -> {
+                User newUser = new User();
+                newUser.setEmail(googleUser.getEmail());
+                newUser.setGoogleId(googleUser.getGoogleId());
+                newUser.setAuthProvider("google");
+                newUser.setCreatedAt(LocalDateTime.now());
+                userService.saveUser(newUser);
+                return newUser;
+            });
 
-            User user;
-            if (userOptional.isPresent()) {
-                user = userOptional.get();
-            } else {
-                // Kullanıcı bulunamadıysa yeni bir kullanıcı oluştur
-                user = new User();
-                user.setEmail(googleUser.getEmail());
-                user.setGoogleId(googleUser.getGoogleId());
-                user.setAuthProvider("google");
-                user.setCreatedAt(LocalDateTime.now());
-                userService.saveUser(user);
-            }
-
-            // Token oluştur
             String token = jwtUtil.generateToken(user.getEmail());
 
-            // User DTO oluştur
             UserResponse response = new UserResponse();
             response.setId(user.getId());
             response.setEmail(user.getEmail());
             response.setFirstName(user.getFirstName());
             response.setLastName(user.getLastName());
 
-            // HashMap ile token + user bilgisi dön
             Map<String, Object> result = new HashMap<>();
             result.put("token", token);
             result.put("user", response);
@@ -183,39 +163,35 @@ public class AuthController {
     }
 
     /**
-     * Google Callback Endpoint
+     * Kullanıcı bilgisi (JWT ile)
      */
-    @GetMapping("/google/callback")
-    public void googleCallback(@RequestParam("id_token") String idToken, HttpServletResponse response) {
-        try {
-            // Google Token'ı doğrula ve kullanıcı bilgilerini al
-            GoogleUser googleUser = googleAuthService.decodeGoogleToken(idToken);
-
-            // Kullanıcı Google ID ile kontrol edilerek işlem yapılır
-            Optional<User> userOptional = userService.findByGoogleId(googleUser.getGoogleId());
-            if (userOptional.isPresent()) {
-                // Kullanıcı mevcutsa frontend'e başarılı giriş yönlendirmesi yapılır
-                response.sendRedirect("http://localhost:3000/home?status=success");
-            } else {
-                // Kullanıcı mevcut değilse yeni bir kullanıcı oluşturulur
-                User newUser = new User();
-                newUser.setEmail(googleUser.getEmail());
-                newUser.setGoogleId(googleUser.getGoogleId());
-                newUser.setAuthProvider("google");
-                newUser.setCreatedAt(LocalDateTime.now());
-                userService.saveUser(newUser);
-
-                // Yeni kullanıcı kaydedildiği bilgisiyle yönlendirme yapılır
-                response.sendRedirect("http://localhost:3000/home?status=new_user");
-            }
-        } catch (Exception e) {
-            // Hata durumunda login sayfasına hata mesajıyla yönlendirme yapılır
-            try {
-                response.sendRedirect("http://localhost:3000/login?status=error");
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getCurrentUser(@RequestHeader("Authorization") String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
         }
-    }
 
+        if (!jwtUtil.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String email = jwtUtil.getEmailFromToken(token);
+        Optional<User> userOptional = userService.findByEmail(email);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        User user = userOptional.get();
+        UserResponse response = new UserResponse();
+        response.setId(user.getId());
+        response.setEmail(user.getEmail());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setCountry(user.getCountry());
+        response.setPhoneNumber(user.getPhoneNumber());
+        response.setBirthDate(user.getBirthDate() != null ? user.getBirthDate().toString() : null);
+        response.setAuthProvider(user.getAuthProvider());
+
+        return ResponseEntity.ok(response);
+    }
 }
