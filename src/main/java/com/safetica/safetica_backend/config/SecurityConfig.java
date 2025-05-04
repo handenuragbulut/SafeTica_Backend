@@ -12,7 +12,6 @@ import com.safetica.safetica_backend.security.JwtFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import com.safetica.safetica_backend.util.JwtUtil;
 
-
 import java.util.Arrays;
 
 @Configuration
@@ -41,7 +40,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/favorites/**").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/error").permitAll()
 
-                        .requestMatchers("/api/saved-articles/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/saved-articles/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/saved-articles/add").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/saved-articles/remove").authenticated()
+
+                        .requestMatchers("/api/saved-articles").permitAll()
+                        .requestMatchers("/api/blog").permitAll()
+                        .requestMatchers("/api/blog/**").permitAll()
                         .requestMatchers("/api/scanning-history/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/auth/update/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/profiles/{userId}").permitAll()

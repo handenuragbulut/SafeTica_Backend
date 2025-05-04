@@ -1,40 +1,69 @@
-// src/main/java/com/safetica/safetica_backend/service/SavedArticleService.java
 package com.safetica.safetica_backend.service;
 
+import com.safetica.safetica_backend.dto.SavedArticleDTO;
+import com.safetica.safetica_backend.entity.BlogPost;
 import com.safetica.safetica_backend.entity.SavedArticle;
-import com.safetica.safetica_backend.entity.User;
+import com.safetica.safetica_backend.repository.BlogPostRepository;
 import com.safetica.safetica_backend.repository.SavedArticleRepository;
-import com.safetica.safetica_backend.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class SavedArticleService {
 
-    @Autowired private SavedArticleRepository savedArticleRepo;
-    @Autowired private UserRepository userRepo;
+    private final SavedArticleRepository savedArticleRepository;
+    private final BlogPostRepository blogPostRepository;
 
-    /** Kullanıcının kaydettiği tüm makaleleri getir */
-    public List<SavedArticle> listSavedArticles(Long userId) {
-        return savedArticleRepo.findAllByUserId(userId);
+    public SavedArticleService(SavedArticleRepository savedArticleRepository,
+                               BlogPostRepository blogPostRepository) {
+        this.savedArticleRepository = savedArticleRepository;
+        this.blogPostRepository = blogPostRepository;
     }
 
-    /** Makaleyi kaydet */
-    public SavedArticle saveArticle(Long userId, Long articleId) {
-        User u = userRepo.findById(userId)
-                         .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        SavedArticle sa = new SavedArticle();
-        sa.setUser(u);
-        sa.setArticleId(articleId);
-        sa.setSavedAt(LocalDateTime.now());
-        return savedArticleRepo.save(sa);
+    public List<SavedArticle> getSavedArticlesByUserId(Long userId) {
+        return savedArticleRepository.findByUserId(userId);
     }
 
-    /** Kaydı kaldır */
-    public void removeSavedArticle(Long userId, Long articleId) {
-        savedArticleRepo.deleteByUserIdAndArticleId(userId, articleId);
+    public boolean isArticleSaved(Long userId, Long postId) {
+        return savedArticleRepository.findByUserIdAndPostId(userId, postId).isPresent();
+    }
+
+    public SavedArticle saveArticle(Long userId, Long postId) {
+        SavedArticle article = new SavedArticle();
+        article.setUserId(userId);
+        article.setPostId(postId);
+        article.setSavedAt(LocalDateTime.now());
+        article.setCreatedAt(LocalDateTime.now());
+        return savedArticleRepository.save(article);
+    }
+
+    public void unsaveArticle(Long userId, Long postId) {
+        savedArticleRepository.deleteByUserIdAndPostId(userId, postId);
+    }
+
+    public List<SavedArticleDTO> getSavedArticleDTOsByUserId(Long userId) {
+        List<SavedArticle> savedArticles = savedArticleRepository.findByUserId(userId);
+
+        return savedArticles.stream()
+            .map(savedArticle -> {
+                Optional<BlogPost> blogPostOpt = blogPostRepository.findById(savedArticle.getPostId());
+                if (blogPostOpt.isPresent()) {
+                    BlogPost blogPost = blogPostOpt.get();
+                    return new SavedArticleDTO(
+                        blogPost.getId(),
+                        blogPost.getTitle(),
+                        blogPost.getShortDescription(),
+                        blogPost.getImageUrl()
+                    );
+                }
+                return null;
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
 }

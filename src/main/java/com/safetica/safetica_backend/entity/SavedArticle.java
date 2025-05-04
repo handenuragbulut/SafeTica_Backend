@@ -1,14 +1,6 @@
-// src/main/java/com/safetica/safetica_backend/entity/SavedArticle.java
 package com.safetica.safetica_backend.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.Id;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Column;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,41 +11,57 @@ public class SavedArticle {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Kullanıcı
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
-    // Blog makale kimliği (ileride BlogPost entity’sine atılabilir)
-    @Column(name = "article_id", nullable = false)
-    private Long articleId;
+    @Column(name = "post_id", nullable = false)
+    private Long postId;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    @Column(name = "saved_at", nullable = false)
+    @Column(name = "saved_at")
     private LocalDateTime savedAt;
 
-    // --- getters / setters ---
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    // Getter & Setter'lar
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getArticleId() { return articleId; }
-    public void setArticleId(Long articleId) { this.articleId = articleId; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Long getUserId() {
+        return userId;
+    }
 
-    // ─── Getter / Setter ───────────────────────────────────────────────────
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public Long getPostId() {
+        return postId;
+    }
+
+    public void setPostId(Long postId) {
+        this.postId = postId;
+    }
+
     public LocalDateTime getSavedAt() {
         return savedAt;
     }
 
     public void setSavedAt(LocalDateTime savedAt) {
         this.savedAt = savedAt;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }
