@@ -55,6 +55,10 @@ public class ProductController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+    @GetMapping("/home")
+    public List<Product> getTopProductsForHome() {
+        return productService.getTopProductsForHome();
+}
     
     
 }
