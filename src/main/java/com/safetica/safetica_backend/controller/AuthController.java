@@ -5,17 +5,16 @@ import com.safetica.safetica_backend.dto.RegisterRequest;
 import com.safetica.safetica_backend.dto.UserResponse;
 import com.safetica.safetica_backend.dto.GoogleLoginRequest;
 import com.safetica.safetica_backend.dto.GoogleUser;
+import com.safetica.safetica_backend.dto.UserUpdateRequest;
 import com.safetica.safetica_backend.entity.User;
 import com.safetica.safetica_backend.service.GoogleAuthService;
 import com.safetica.safetica_backend.service.UserService;
-
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -194,4 +193,48 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/update")
+    public ResponseEntity<?> updateUser(
+            @RequestHeader("Authorization") String token,
+            @RequestBody UserUpdateRequest request) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        if (!jwtUtil.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token.");
+        }
+
+        String email = jwtUtil.getEmailFromToken(token);
+        Optional<User> optionalUser = userService.findByEmail(email);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        }
+
+        try {
+            User user = optionalUser.get();
+
+            // Güncelleme işlemleri
+            if (request.getCountry() != null) {
+                user.setCountry(request.getCountry());
+            }
+
+            if (request.getPhoneNumber() != null) {
+                user.setPhoneNumber(request.getPhoneNumber());
+            }
+
+            if (request.getBirthDate() != null) {
+                user.setBirthDate(request.getBirthDate());
+            }
+
+            userService.saveUser(user); // güncellenmiş kullanıcıyı kaydet
+
+            return ResponseEntity.ok("User info updated successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Update failed: " + e.getMessage());
+        }
+    }
+
 }
