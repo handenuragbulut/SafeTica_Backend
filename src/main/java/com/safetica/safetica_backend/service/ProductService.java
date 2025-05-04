@@ -1,5 +1,6 @@
 package com.safetica.safetica_backend.service;
 
+import org.hibernate.Length;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +29,12 @@ public class ProductService {
     public Optional<Product> getProductById(Long id) {
         return productRepository.findById(id);
     }
-
+    public List<Product> getTopProductsForHome() {
+        return productRepository.findAll()
+                .stream()
+                .limit(16)
+                .collect(Collectors.toList());
+    }
     public List<Product> filterProducts(
     List<String> categories,
     List<String> subCategories,
