@@ -1,9 +1,8 @@
-// src/main/java/com/safetica/safetica_backend/controller/SavedArticleController.java
 package com.safetica.safetica_backend.controller;
 
+import com.safetica.safetica_backend.dto.SavedArticleDTO;
 import com.safetica.safetica_backend.entity.SavedArticle;
 import com.safetica.safetica_backend.service.SavedArticleService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,44 +12,40 @@ import java.util.List;
 @RequestMapping("/api/saved-articles")
 public class SavedArticleController {
 
-    @Autowired
-    private SavedArticleService savedArticleService;
+    private final SavedArticleService savedArticleService;
 
-    /** 
-     * Kullanıcının kaydettiği tüm makaleleri getir 
-     * GET /api/saved-articles?userId=123
-     */
-    @GetMapping
-    public ResponseEntity<List<SavedArticle>> list(
-            @RequestParam("userId") Long userId
-    ) {
-        List<SavedArticle> list = savedArticleService.listSavedArticles(userId);
-        return ResponseEntity.ok(list);
+    public SavedArticleController(SavedArticleService savedArticleService) {
+        this.savedArticleService = savedArticleService;
     }
 
-    /**
-     * Makaleyi kaydet
-     * POST /api/saved-articles?userId=123&articleId=456
-     */
-    @PostMapping
-    public ResponseEntity<SavedArticle> save(
-            @RequestParam("userId") Long userId,
-            @RequestParam("articleId") Long articleId
-    ) {
-        SavedArticle sa = savedArticleService.saveArticle(userId, articleId);
-        return ResponseEntity.ok(sa);
+    // ❗ DTO ile zenginleştirilmiş endpoint
+    @GetMapping("/{userId}/dtos")
+    public ResponseEntity<List<SavedArticleDTO>> getSavedArticleDTOs(@PathVariable Long userId) {
+        List<SavedArticleDTO> dtos = savedArticleService.getSavedArticleDTOsByUserId(userId);
+        return ResponseEntity.ok(dtos);
     }
 
-    /**
-     * Kaydı kaldır
-     * DELETE /api/saved-articles?userId=123&articleId=456
-     */
-    @DeleteMapping
-    public ResponseEntity<Void> remove(
-            @RequestParam("userId") Long userId,
-            @RequestParam("articleId") Long articleId
-    ) {
-        savedArticleService.removeSavedArticle(userId, articleId);
+    @GetMapping("/{userId}")
+    public ResponseEntity<List<SavedArticleDTO>> getSavedArticles(@PathVariable Long userId) {
+        List<SavedArticleDTO> articles = savedArticleService.getSavedArticleDTOsByUserId(userId);
+        return ResponseEntity.ok(articles);
+    }
+
+    @PostMapping("/add")
+    public ResponseEntity<SavedArticle> saveArticle(@RequestParam Long userId, @RequestParam Long postId) {
+        SavedArticle article = savedArticleService.saveArticle(userId, postId);
+        return ResponseEntity.ok(article);
+    }
+
+    @DeleteMapping("/remove")
+    public ResponseEntity<Void> unsaveArticle(@RequestParam Long userId, @RequestParam Long postId) {
+        savedArticleService.unsaveArticle(userId, postId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/is-saved")
+    public ResponseEntity<Boolean> isArticleSaved(@RequestParam Long userId, @RequestParam Long postId) {
+        boolean saved = savedArticleService.isArticleSaved(userId, postId);
+        return ResponseEntity.ok(saved);
     }
 }
