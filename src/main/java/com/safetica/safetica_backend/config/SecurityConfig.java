@@ -17,11 +17,14 @@ import java.util.Arrays;
 
 @Configuration
 public class SecurityConfig {
-    private final JwtUtil jwtUtil;
-    public SecurityConfig(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
-    }
 
+    private final JwtUtil jwtUtil;
+    private final JwtFilter jwtFilter;
+
+    public SecurityConfig(JwtUtil jwtUtil, JwtFilter jwtFilter) {
+        this.jwtUtil = jwtUtil;
+        this.jwtFilter = jwtFilter;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,12 +43,19 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/saved-articles/**").permitAll()
                         .requestMatchers("/api/scanning-history/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/auth/update/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/profiles/{userId}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/favorites/{userId}").permitAll()
+                        .requestMatchers("/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/webjars/**")
+                        .permitAll()
                         .anyRequest().authenticated());
 
         // 🔒 JwtFilter ekleniyor
-        http.addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

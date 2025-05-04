@@ -6,7 +6,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -18,15 +17,14 @@ import java.io.IOException;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
+    private final UserService userService;
 
-    public JwtFilter(JwtUtil jwtUtil) {
+    // ✅ Artık constructor ile ikisi birlikte alınacak
+    public JwtFilter(JwtUtil jwtUtil, UserService userService) {
         this.jwtUtil = jwtUtil;
+        this.userService = userService;
     }
-
-    @Autowired
-    private UserService userService;
 
     @Override
     protected void doFilterInternal(
@@ -54,11 +52,9 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // Eğer token geçersizse veya hata varsa, yine de istek devam etmeli!
             System.out.println("JWT doğrulama hatası: " + e.getMessage());
         }
 
-        filterChain.doFilter(request, response); // 🔑 Bu hep çağrılmalı
+        filterChain.doFilter(request, response);
     }
-
 }

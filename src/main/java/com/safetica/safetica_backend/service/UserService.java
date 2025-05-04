@@ -1,12 +1,12 @@
 package com.safetica.safetica_backend.service;
 
-
 import com.safetica.safetica_backend.entity.User;
 import com.safetica.safetica_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -28,9 +28,8 @@ public class UserService {
         userRepository.save(user);
     }
 
-
-     // Authenticate user by comparing hashed passwords
-     public boolean authenticate(String email, String password) {
+    // Authenticate user by comparing hashed passwords
+    public boolean authenticate(String email, String password) {
         Optional<User> user = userRepository.findByEmail(email);
         if (user.isPresent()) {
             return BCrypt.checkpw(password, user.get().getPasswordHash()); // Verify password
@@ -46,5 +45,15 @@ public class UserService {
         return userRepository.findByGoogleId(googleId);
     }
 
-   
+    public void updateUserInfo(Long userId, String country, String phoneNumber, LocalDate birthDate) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            user.setCountry(country);
+            user.setPhoneNumber(phoneNumber);
+            user.setBirthDate(birthDate);
+            userRepository.save(user); // 🔁 Güncelleme burada yapılır
+        }
+    }
+
 }
