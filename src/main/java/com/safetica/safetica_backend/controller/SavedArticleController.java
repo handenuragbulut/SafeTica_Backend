@@ -1,6 +1,7 @@
 package com.safetica.safetica_backend.controller;
 
 import com.safetica.safetica_backend.dto.SavedArticleDTO;
+import com.safetica.safetica_backend.dto.SaveArticleRequest;
 import com.safetica.safetica_backend.entity.SavedArticle;
 import com.safetica.safetica_backend.service.SavedArticleService;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,12 @@ public class SavedArticleController {
     @PostMapping("/add")
     public ResponseEntity<SavedArticle> saveArticle(@RequestParam Long userId, @RequestParam Long postId) {
         SavedArticle article = savedArticleService.saveArticle(userId, postId);
+        return ResponseEntity.ok(article);
+    }
+
+    @PostMapping
+    public ResponseEntity<SavedArticle> saveArticle(@RequestBody SaveArticleRequest request) {
+        SavedArticle article = savedArticleService.saveArticle(request.getUserId(), request.getPostId());
         return ResponseEntity.ok(article);
     }
 
