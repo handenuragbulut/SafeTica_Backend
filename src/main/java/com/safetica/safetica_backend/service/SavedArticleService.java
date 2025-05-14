@@ -5,6 +5,9 @@ import com.safetica.safetica_backend.entity.BlogPost;
 import com.safetica.safetica_backend.entity.SavedArticle;
 import com.safetica.safetica_backend.repository.BlogPostRepository;
 import com.safetica.safetica_backend.repository.SavedArticleRepository;
+import com.safetica.safetica_backend.repository.UserRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,9 +23,18 @@ public class SavedArticleService {
     private final BlogPostRepository blogPostRepository;
 
     public SavedArticleService(SavedArticleRepository savedArticleRepository,
-                               BlogPostRepository blogPostRepository) {
+            BlogPostRepository blogPostRepository) {
         this.savedArticleRepository = savedArticleRepository;
         this.blogPostRepository = blogPostRepository;
+    }
+
+    @Autowired
+    private UserRepository userRepository; // ya da kendi entity sınıfına göre
+
+    public Long getUserIdByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"))
+                .getId();
     }
 
     public List<SavedArticle> getSavedArticlesByUserId(Long userId) {
@@ -50,20 +62,19 @@ public class SavedArticleService {
         List<SavedArticle> savedArticles = savedArticleRepository.findByUserId(userId);
 
         return savedArticles.stream()
-            .map(savedArticle -> {
-                Optional<BlogPost> blogPostOpt = blogPostRepository.findById(savedArticle.getPostId());
-                if (blogPostOpt.isPresent()) {
-                    BlogPost blogPost = blogPostOpt.get();
-                    return new SavedArticleDTO(
-                        blogPost.getId(),
-                        blogPost.getTitle(),
-                        blogPost.getShortDescription(),
-                        blogPost.getImageUrl()
-                    );
-                }
-                return null;
-            })
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+                .map(savedArticle -> {
+                    Optional<BlogPost> blogPostOpt = blogPostRepository.findById(savedArticle.getPostId());
+                    if (blogPostOpt.isPresent()) {
+                        BlogPost blogPost = blogPostOpt.get();
+                        return new SavedArticleDTO(
+                                blogPost.getId(),
+                                blogPost.getTitle(),
+                                blogPost.getShortDescription(),
+                                blogPost.getImageUrl());
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 }
