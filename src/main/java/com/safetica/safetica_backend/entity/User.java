@@ -45,7 +45,13 @@ public class User {
     private String googleId;
 
     @Column(nullable = false)
-    private String authProvider = "email"; 
+    private String authProvider = "email";
+
+    @Column(nullable = false)
+    private String role = "USER"; // varsayılan rol USER
+
+    @Column(nullable = false)
+    private boolean active = true; // varsayılan aktif
 
     // Getters and Setters
     public Long getId() {
@@ -144,12 +150,27 @@ public class User {
         this.googleId = googleId;
     }
 
-
     public String getAuthProvider() {
         return authProvider;
     }
 
     public void setAuthProvider(String authProvider) {
         this.authProvider = authProvider;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }

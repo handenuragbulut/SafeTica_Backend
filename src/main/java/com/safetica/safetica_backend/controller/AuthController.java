@@ -52,7 +52,12 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
             }
 
-            String token = jwtUtil.generateToken(user.getEmail());
+            // Kullanıcı hesabı devre dışı bırakılmışsa
+            if (!user.isActive()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Hesabınız devre dışı bırakıldı.");
+            }
+
+            String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
 
             UserResponse response = new UserResponse();
             response.setId(user.getId());
@@ -113,6 +118,8 @@ public class AuthController {
             user.setAuthProvider("email");
             user.setTermsAccepted(registerRequest.isTermsAccepted());
             user.setCreatedAt(LocalDateTime.now());
+            user.setActive(true);
+            user.setRole("USER");
 
             userService.saveUser(user);
             return ResponseEntity.ok("Registration successful!");
@@ -142,7 +149,7 @@ public class AuthController {
                 return newUser;
             });
 
-            String token = jwtUtil.generateToken(user.getEmail());
+            String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
 
             UserResponse response = new UserResponse();
             response.setId(user.getId());

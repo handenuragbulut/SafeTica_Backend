@@ -1,7 +1,9 @@
 package com.safetica.safetica_backend.entity;
 
 import jakarta.persistence.*;
-import java.time.ZonedDateTime;
+
+import java.time.LocalDateTime;
+
 
 @Entity
 @Table(name = "blog_posts")
@@ -23,7 +25,7 @@ public class BlogPost {
     private String imageUrl;
 
     @Column(name = "published_at")
-    private ZonedDateTime publishedAt;
+    private LocalDateTime publishedAt;
 
     // --- Getter ve Setter'lar ---
 
@@ -67,11 +69,11 @@ public class BlogPost {
         this.imageUrl = imageUrl;
     }
 
-    public ZonedDateTime getPublishedAt() {
+    public LocalDateTime getPublishedAt() {
         return publishedAt;
     }
 
-    public void setPublishedAt(ZonedDateTime publishedAt) {
+    public void setPublishedAt(LocalDateTime publishedAt) {
         this.publishedAt = publishedAt;
     }
 }

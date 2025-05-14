@@ -1,5 +1,6 @@
 package com.safetica.safetica_backend.service;
 
+import com.safetica.safetica_backend.dto.UserResponse;
 import com.safetica.safetica_backend.entity.User;
 import com.safetica.safetica_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,7 +8,9 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -56,4 +59,38 @@ public class UserService {
         }
     }
 
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(user -> {
+                    UserResponse response = new UserResponse();
+                    response.setId(user.getId());
+                    response.setEmail(user.getEmail());
+                    response.setFirstName(user.getFirstName());
+                    response.setLastName(user.getLastName());
+                    response.setCountry(user.getCountry());
+                    response.setPhoneNumber(user.getPhoneNumber());
+                    response.setBirthDate(user.getBirthDate());
+                    response.setAuthProvider(user.getAuthProvider());
+                    response.setRole(user.getRole());
+                    response.setActive(user.isActive());
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public Optional<User> updateUserRole(Long id, String role) {
+        return userRepository.findById(id).map(user -> {
+            user.setRole(role);
+            userRepository.save(user);
+            return user;
+        });
+    }
+
+    public Optional<User> updateUserStatus(Long id, boolean active) {
+        return userRepository.findById(id).map(user -> {
+            user.setActive(active);
+            userRepository.save(user);
+            return user;
+        });
+    }
 }

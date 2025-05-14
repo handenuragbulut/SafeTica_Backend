@@ -10,6 +10,25 @@ public class UserResponse {
     private Object birthDate;
     private String authProvider;
 
+    private String role;
+    private boolean active;
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+    
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     public Object getBirthDate() {
         return birthDate;
     }
@@ -75,5 +94,4 @@ public class UserResponse {
         this.phoneNumber = phoneNumber;
     }
 
-    
 }
