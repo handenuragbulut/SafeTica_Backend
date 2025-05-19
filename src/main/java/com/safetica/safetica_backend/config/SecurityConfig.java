@@ -59,6 +59,10 @@ public class SecurityConfig {
                         // ✅ Kullanıcıya açık ürün listeleme ve detaylar
                         .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
 
+                        // ✅ Temsilci ürün gönderme işlemleri (EKLENEN KURAL)
+                        .requestMatchers("/api/representative/products/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/representative/products/**").permitAll()
+
                         // ✅ Admin özel işlemleri
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
