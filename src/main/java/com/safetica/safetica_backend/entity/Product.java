@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 public class Product {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // IDENTITY, otomatik artırma için kullanılır
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
@@ -20,17 +20,23 @@ public class Product {
     @Column(nullable = false)
     private String category;
 
-    @Column(name = "sub_category") // Veritabanındaki sütun adı farklı olduğu için
+    @Column(name = "sub_category")
     private String subCategory;
 
-    @Column(length = 1000) // Daha uzun bir açıklama metni için length belirlenebilir
+    @Column(length = 1000)
     private String description;
 
-    @Column(length = 2000) // İçeriklerin uzun olabileceğini varsayıyoruz
+    @Column(length = 2000)
     private String ingredients;
 
     @Column(length = 1000)
     private String certifications;
+
+    @Column(nullable = false)
+    private String status = "APPROVED"; // PENDING, APPROVED, REJECTED
+
+    @Column(name = "submitted_by_representative_id", nullable = true)
+    private Long submittedByRepresentativeId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -38,15 +44,15 @@ public class Product {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    private String imageUrl; // Resim URL'si
+    private String imageUrl;
 
-
-    // Constructor'lar
+    // Constructors
     public Product() {
     }
 
     public Product(String name, String brand, String category, String subCategory, String description,
-                   String ingredients, String certifications, LocalDateTime createdAt, LocalDateTime updatedAt, String imageUrl) {
+            String ingredients, String certifications, LocalDateTime createdAt,
+            LocalDateTime updatedAt, String imageUrl) {
         this.name = name;
         this.brand = brand;
         this.category = category;
@@ -59,9 +65,21 @@ public class Product {
         this.imageUrl = imageUrl;
     }
 
+    // PrePersist and PreUpdate for Timestamps (Optional)
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
 
-    // Getter ve Setter'lar
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
+    // Getters and Setters
+    // ... (Aynı şekilde tüm alanlar için mevcut getter/setter'lar)
+    // imageUrl
     public String getImageUrl() {
         return imageUrl;
     }
@@ -70,7 +88,16 @@ public class Product {
         this.imageUrl = imageUrl;
     }
 
+    // Status
+    public String getStatus() {
+        return status;
+    }
 
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    // ID
     public Long getId() {
         return id;
     }
@@ -79,6 +106,7 @@ public class Product {
         this.id = id;
     }
 
+    // Name
     public String getName() {
         return name;
     }
@@ -87,6 +115,7 @@ public class Product {
         this.name = name;
     }
 
+    // Brand
     public String getBrand() {
         return brand;
     }
@@ -95,6 +124,7 @@ public class Product {
         this.brand = brand;
     }
 
+    // Category
     public String getCategory() {
         return category;
     }
@@ -103,6 +133,7 @@ public class Product {
         this.category = category;
     }
 
+    // SubCategory
     public String getSubCategory() {
         return subCategory;
     }
@@ -111,6 +142,7 @@ public class Product {
         this.subCategory = subCategory;
     }
 
+    // Description
     public String getDescription() {
         return description;
     }
@@ -119,6 +151,7 @@ public class Product {
         this.description = description;
     }
 
+    // Ingredients
     public String getIngredients() {
         return ingredients;
     }
@@ -127,6 +160,7 @@ public class Product {
         this.ingredients = ingredients;
     }
 
+    // Certifications
     public String getCertifications() {
         return certifications;
     }
@@ -135,6 +169,7 @@ public class Product {
         this.certifications = certifications;
     }
 
+    // CreatedAt
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -143,6 +178,7 @@ public class Product {
         this.createdAt = createdAt;
     }
 
+    // UpdatedAt
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
@@ -151,7 +187,15 @@ public class Product {
         this.updatedAt = updatedAt;
     }
 
-    // toString metodu
+    public Long getSubmittedByRepresentativeId() {
+        return submittedByRepresentativeId;
+    }
+
+    public void setSubmittedByRepresentativeId(Long submittedByRepresentativeId) {
+        this.submittedByRepresentativeId = submittedByRepresentativeId;
+    }
+
+
     @Override
     public String toString() {
         return "Product{" +
@@ -163,8 +207,11 @@ public class Product {
                 ", description='" + description + '\'' +
                 ", ingredients='" + ingredients + '\'' +
                 ", certifications='" + certifications + '\'' +
+                ", status='" + status + '\'' +
+                ", submittedByRepresentativeId=" + submittedByRepresentativeId +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
+                ", imageUrl='" + imageUrl + '\'' +
                 '}';
     }
 }
