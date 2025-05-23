@@ -46,4 +46,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
         List<Product> findBySubmittedByRepresentativeIdIsNotNullAndStatus(String status);
 
+        List<Product> findBySubmittedByRepresentativeId(Long submittedByRepresentativeId);
+
 }

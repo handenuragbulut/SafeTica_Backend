@@ -3,6 +3,8 @@ package com.safetica.safetica_backend.util;
 import io.jsonwebtoken.Jwts;
 // import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -38,7 +40,6 @@ public class JwtUtil {
                 .get("role", String.class);
     }
 
-    
     // Token içinden email’i almak için
     public String getEmailFromToken(String token) {
         return Jwts.parserBuilder()
@@ -58,5 +59,13 @@ public class JwtUtil {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public String extractTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 }

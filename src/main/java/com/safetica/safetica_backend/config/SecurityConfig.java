@@ -34,6 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/google-login").permitAll()
                         .requestMatchers("/api/representatives/apply").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/representatives/apply").permitAll()
                         .requestMatchers("/api/ingredients/**").permitAll()
                         .requestMatchers("/api/profiles/**").permitAll()
                         .requestMatchers("/api/favorites/**").permitAll()
@@ -61,6 +62,7 @@ public class SecurityConfig {
 
                         // ✅ Temsilci ürün gönderme işlemleri (EKLENEN KURAL)
                         .requestMatchers("/api/representative/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/representative/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/representative/products/**").permitAll()
 
                         // ✅ Admin özel işlemleri

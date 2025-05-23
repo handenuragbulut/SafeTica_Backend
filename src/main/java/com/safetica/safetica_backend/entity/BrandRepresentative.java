@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "brand_representatives")
 public class BrandRepresentative {
-    
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,11 +17,12 @@ public class BrandRepresentative {
     private String contactEmail;
     private String country;
     private String phoneNumber;
-    private String status = "PENDING";  // Başlangıçta bekleyen durumda
-
+    private String status = "PENDING"; // Başlangıçta bekleyen durumda
+   
     public Long getId() {
-    return id;
-}
+        return id;
+    }
+
     public String getCompanyName() {
         return companyName;
     }
@@ -88,8 +88,6 @@ public class BrandRepresentative {
     }
 
     @OneToOne
-    private User user;  // İlgili kullanıcı hesabı (zorunlu değilse kaldırılabilir)
+    private User user; // İlgili kullanıcı hesabı (zorunlu değilse kaldırılabilir)
 
-    
 }
-

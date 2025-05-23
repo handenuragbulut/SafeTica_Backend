@@ -48,6 +48,11 @@ public class AuthController {
             }
 
             User user = userOptional.get();
+
+            if (!user.getRole().equals("USER")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: Not a user account.");
+            }
+
             if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
             }
@@ -76,6 +81,43 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An error occurred while logging in.");
         }
+    }
+
+    @PostMapping("/representative-login")
+    public ResponseEntity<?> representativeLogin(@RequestBody LoginRequest loginRequest) {
+        Optional<User> userOpt = userService.findByEmail(loginRequest.getEmail());
+
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+        }
+
+        User user = userOpt.get();
+
+        if (!user.getRole().equals("BRAND_REPRESENTATIVE")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: Not a representative.");
+        }
+
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
+        }
+
+        if (!user.isActive()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Account is inactive.");
+        }
+
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
+
+        UserResponse response = new UserResponse();
+        response.setId(user.getId());
+        response.setEmail(user.getEmail());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("token", token);
+        result.put("user", response);
+
+        return ResponseEntity.ok(result);
     }
 
     /**

@@ -29,9 +29,9 @@ public class BrandRepresentativeController {
         representative.setContactEmail(request.getContactEmail());
         representative.setCountry(request.getCountry());
         representative.setPhoneNumber(request.getPhoneNumber());
-        representative.setStatus("PENDING"); // Başlangıçta PENDING
+        representative.setStatus("PENDING");
 
-        BrandRepresentative saved = brandRepService.apply(representative);
+        BrandRepresentative saved = brandRepService.apply(representative, request.getPassword());
         return ResponseEntity.ok(saved);
     }
 
@@ -58,14 +58,14 @@ public class BrandRepresentativeController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // ✅ 5. Tüm Temsilcileri Listeleme (status filtresi olmadan)
+    // ✅ 5. Tüm Temsilcileri Listeleme
     @GetMapping("/all")
     public ResponseEntity<List<BrandRepresentative>> getAllRepresentatives() {
         List<BrandRepresentative> all = brandRepService.getAll();
         return ResponseEntity.ok(all);
     }
 
-    // ✅ Get Representative by ID
+    // ✅ 6. ID ile temsilci getirme
     @GetMapping("/{id}")
     public ResponseEntity<BrandRepresentative> getById(@PathVariable Long id) {
         return brandRepService.getById(id)
@@ -73,11 +73,11 @@ public class BrandRepresentativeController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // ✅ 7. Güncelleme
     @PutMapping("/{id}")
     public ResponseEntity<BrandRepresentative> update(@PathVariable Long id, @RequestBody BrandRepresentative updated) {
         return brandRepService.update(id, updated)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
 }
