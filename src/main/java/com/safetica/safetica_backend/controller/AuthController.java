@@ -120,6 +120,46 @@ public class AuthController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/admin-login")
+    public ResponseEntity<?> adminLogin(@RequestBody LoginRequest loginRequest) {
+        try {
+            Optional<User> userOptional = userService.findByEmail(loginRequest.getEmail());
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+            }
+
+            User user = userOptional.get();
+            if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
+            }
+
+            if (!user.getRole().equals("ADMIN")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied: Not an admin account");
+            }
+
+            if (!user.isActive()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Account is disabled");
+            }
+
+            String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
+
+            UserResponse response = new UserResponse();
+            response.setId(user.getId());
+            response.setEmail(user.getEmail());
+            response.setFirstName(user.getFirstName());
+            response.setLastName(user.getLastName());
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("token", token);
+            result.put("user", response);
+
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while logging in.");
+        }
+    }
+
     /**
      * Kullanıcı kayıt
      */
