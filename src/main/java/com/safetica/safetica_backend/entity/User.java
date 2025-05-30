@@ -53,6 +53,9 @@ public class User {
     @Column(nullable = false)
     private boolean active = true; // varsayılan aktif
 
+    @Column(name = "preferences_survey_completed", nullable = false)
+    private boolean preferencesCompleted = false; // Yeni kullanıcılar için varsayılan false
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -172,5 +175,13 @@ public class User {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isPreferencesCompleted() {
+        return preferencesCompleted;
+    }
+
+    public void setPreferencesCompleted(boolean preferencesCompleted) {
+        this.preferencesCompleted = preferencesCompleted;
     }
 }

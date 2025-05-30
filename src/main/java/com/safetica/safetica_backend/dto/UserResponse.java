@@ -12,6 +12,15 @@ public class UserResponse {
 
     private String role;
     private boolean active;
+    private boolean preferencesCompleted; 
+
+    public boolean isPreferencesCompleted() {
+        return preferencesCompleted;
+    }
+
+    public void setPreferencesCompleted(boolean preferencesCompleted) {
+        this.preferencesCompleted = preferencesCompleted;
+    }
 
     public String getRole() {
         return role;
