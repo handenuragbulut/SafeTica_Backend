@@ -69,6 +69,7 @@ public class AuthController {
             response.setEmail(user.getEmail());
             response.setFirstName(user.getFirstName());
             response.setLastName(user.getLastName());
+            response.setPreferencesCompleted(user.isPreferencesCompleted());
 
             Map<String, Object> result = new HashMap<>();
             result.put("token", token);

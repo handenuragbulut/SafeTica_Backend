@@ -45,6 +45,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/saved-articles").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/saved-articles/**").authenticated()
 
+                        .requestMatchers("/api/preferences/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/preferences/save").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/preferences/update").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/preferences/**").authenticated()
+
                         .requestMatchers("/api/blog").permitAll()
                         .requestMatchers("/api/blog/**").permitAll()
                         .requestMatchers("/api/scanning-history/**").permitAll()
