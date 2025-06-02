@@ -42,8 +42,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/error").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/saved-articles/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/saved-articles").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/saved-articles/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/saved-articles/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/saved-articles/**").permitAll()
 
                         .requestMatchers("/api/preferences/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/preferences/save").authenticated()

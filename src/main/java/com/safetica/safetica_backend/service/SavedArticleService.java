@@ -3,6 +3,7 @@ package com.safetica.safetica_backend.service;
 import com.safetica.safetica_backend.dto.SavedArticleDTO;
 import com.safetica.safetica_backend.entity.BlogPost;
 import com.safetica.safetica_backend.entity.SavedArticle;
+import com.safetica.safetica_backend.entity.User;
 import com.safetica.safetica_backend.repository.BlogPostRepository;
 import com.safetica.safetica_backend.repository.SavedArticleRepository;
 import com.safetica.safetica_backend.repository.UserRepository;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+//import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,14 +23,14 @@ public class SavedArticleService {
     private final SavedArticleRepository savedArticleRepository;
     private final BlogPostRepository blogPostRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     public SavedArticleService(SavedArticleRepository savedArticleRepository,
             BlogPostRepository blogPostRepository) {
         this.savedArticleRepository = savedArticleRepository;
         this.blogPostRepository = blogPostRepository;
     }
-
-    @Autowired
-    private UserRepository userRepository; // ya da kendi entity sınıfına göre
 
     public Long getUserIdByEmail(String email) {
         return userRepository.findByEmail(email)
@@ -38,41 +39,53 @@ public class SavedArticleService {
     }
 
     public List<SavedArticle> getSavedArticlesByUserId(Long userId) {
-        return savedArticleRepository.findByUserId(userId);
+        return savedArticleRepository.findByUser_Id(userId);
     }
 
     public boolean isArticleSaved(Long userId, Long postId) {
-        return savedArticleRepository.findByUserIdAndPostId(userId, postId).isPresent();
+        return savedArticleRepository.findByUser_IdAndPost_Id(userId, postId).isPresent();
     }
 
     public SavedArticle saveArticle(Long userId, Long postId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        BlogPost post = blogPostRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
         SavedArticle article = new SavedArticle();
-        article.setUserId(userId);
-        article.setPostId(postId);
+        article.setUser(user);
+        article.setPost(post);
         article.setSavedAt(LocalDateTime.now());
-        article.setCreatedAt(LocalDateTime.now());
+
         return savedArticleRepository.save(article);
     }
 
     public void unsaveArticle(Long userId, Long postId) {
-        savedArticleRepository.deleteByUserIdAndPostId(userId, postId);
-    }
+    savedArticleRepository.findByUser_IdAndPost_Id(userId, postId).ifPresentOrElse(
+        article -> {
+            savedArticleRepository.delete(article);
+            System.out.println("Silindi -> userId: " + userId + ", postId: " + postId);
+        },
+        () -> {
+            System.out.println("Silinecek kayıt bulunamadı -> userId: " + userId + ", postId: " + postId);
+            // Buraya throw new RuntimeException(...) koymak istemiyorsan boş bırak.
+        }
+    );
+}
+
 
     public List<SavedArticleDTO> getSavedArticleDTOsByUserId(Long userId) {
-        List<SavedArticle> savedArticles = savedArticleRepository.findByUserId(userId);
+        List<SavedArticle> savedArticles = savedArticleRepository.findByUser_Id(userId);
 
         return savedArticles.stream()
                 .map(savedArticle -> {
-                    Optional<BlogPost> blogPostOpt = blogPostRepository.findById(savedArticle.getPostId());
-                    if (blogPostOpt.isPresent()) {
-                        BlogPost blogPost = blogPostOpt.get();
-                        return new SavedArticleDTO(
-                                blogPost.getId(),
-                                blogPost.getTitle(),
-                                blogPost.getShortDescription(),
-                                blogPost.getImageUrl());
-                    }
-                    return null;
+                    BlogPost blogPost = savedArticle.getPost();
+                    return new SavedArticleDTO(
+                            blogPost.getId(),
+                            blogPost.getTitle(),
+                            blogPost.getShortDescription(),
+                            blogPost.getImageUrl());
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());

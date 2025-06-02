@@ -11,20 +11,20 @@ public class SavedArticle {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    // Kullanıcı ile ilişki (ManyToOne)
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @Column(name = "post_id", nullable = false)
-    private Long postId;
+    // Makale ile ilişki (ManyToOne)
+    @ManyToOne
+    @JoinColumn(name = "post_id", nullable = false)
+    private BlogPost post;
 
     @Column(name = "saved_at")
-    private LocalDateTime savedAt;
+    private LocalDateTime savedAt = LocalDateTime.now();
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    // Getter & Setter'lar
-
+    // --- Getter & Setter'lar ---
     public Long getId() {
         return id;
     }
@@ -33,20 +33,20 @@ public class SavedArticle {
         this.id = id;
     }
 
-    public Long getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
-    public Long getPostId() {
-        return postId;
+    public BlogPost getPost() {
+        return post;
     }
 
-    public void setPostId(Long postId) {
-        this.postId = postId;
+    public void setPost(BlogPost post) {
+        this.post = post;
     }
 
     public LocalDateTime getSavedAt() {
@@ -55,13 +55,5 @@ public class SavedArticle {
 
     public void setSavedAt(LocalDateTime savedAt) {
         this.savedAt = savedAt;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 }
