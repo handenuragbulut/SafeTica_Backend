@@ -2,6 +2,8 @@ package com.safetica.safetica_backend.controller;
 
 import com.safetica.safetica_backend.entity.Product;
 import com.safetica.safetica_backend.repository.ProductRepository;
+import com.safetica.safetica_backend.service.ActivityLogService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +15,11 @@ import java.util.Optional;
 public class AdminProductController {
 
     private final ProductRepository productRepository;
+    private final ActivityLogService activityLogService;
 
-    public AdminProductController(ProductRepository productRepository) {
+    public AdminProductController(ProductRepository productRepository, ActivityLogService activityLogService) {
         this.productRepository = productRepository;
+        this.activityLogService = activityLogService;
     }
 
     // ✅ Onay bekleyen ürünleri listeler
@@ -33,6 +37,7 @@ public class AdminProductController {
             Product product = optionalProduct.get();
             product.setStatus("APPROVED");
             productRepository.save(product);
+             activityLogService.log("approved", "Product approved: " + product.getName(), null);
             return ResponseEntity.ok(product);
         } else {
             return ResponseEntity.notFound().build();
@@ -47,6 +52,7 @@ public class AdminProductController {
             Product product = optionalProduct.get();
             product.setStatus("REJECTED");
             productRepository.save(product);
+            activityLogService.log("rejected", "Product rejected: " + product.getName(), null);
             return ResponseEntity.ok(product);
         } else {
             return ResponseEntity.notFound().build();

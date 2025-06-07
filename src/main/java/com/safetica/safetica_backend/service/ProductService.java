@@ -21,6 +21,10 @@ public class ProductService {
         return productRepository.findAll();
     }
 
+    public List<Product> getApprovedProducts() {
+        return productRepository.findByStatus("APPROVED");
+    }
+
     public List<Product> searchProducts(String query) {
         return productRepository
                 .findByNameContainingIgnoreCaseOrBrandContainingIgnoreCaseOrCategoryContainingIgnoreCaseOrSubCategoryContainingIgnoreCase(

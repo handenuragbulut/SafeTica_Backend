@@ -65,10 +65,15 @@ public class SecurityConfig {
                         // ✅ Kullanıcıya açık ürün listeleme ve detaylar
                         .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
 
+                        // ✅ Temsilci dashboard işlemleri
+                        
+
                         // ✅ Temsilci ürün gönderme işlemleri (EKLENEN KURAL)
                         .requestMatchers("/api/representative/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/representative/products/**").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/representative/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/representative/products/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/representative/products/**").permitAll()
 
                         // ✅ Admin özel işlemleri
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
@@ -78,7 +83,8 @@ public class SecurityConfig {
 
                         // ✅ Diğer admin endpointleri
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
-                        .requestMatchers("/api/representatives/**").hasRole("ADMIN")
+                        .requestMatchers("/api/representatives/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated());
 
         // 🔒 JwtFilter ekleniyor

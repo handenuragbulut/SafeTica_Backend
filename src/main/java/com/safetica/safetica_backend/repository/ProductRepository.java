@@ -44,6 +44,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         // ✅ Status'a göre ürünleri getiren metot
         List<Product> findByStatus(String status);
 
+        long countByStatus(String status);
+
         List<Product> findBySubmittedByRepresentativeIdIsNotNullAndStatus(String status);
 
         List<Product> findBySubmittedByRepresentativeId(Long submittedByRepresentativeId);

@@ -16,9 +16,15 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
+    // @GetMapping
+    // public List<Product> getAllProducts() {
+    //     return productService.getAllProducts();
+    // }
+
     @GetMapping
-    public List<Product> getAllProducts() {
-        return productService.getAllProducts();
+    public ResponseEntity<List<Product>> getApprovedProducts() {
+        List<Product> approvedProducts = productService.getApprovedProducts();
+        return ResponseEntity.ok(approvedProducts);
     }
 
     @GetMapping("/search")
