@@ -14,4 +14,6 @@ public interface BrandRepresentativeRepository extends JpaRepository<BrandRepres
 
     // Email ile bulmak için
     BrandRepresentative findByContactEmail(String contactEmail);
+
+    long countByStatus(String status);
 }

@@ -23,14 +23,17 @@ public class Product {
     @Column(name = "sub_category")
     private String subCategory;
 
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT") // 🔥 Uzun açıklama metni için
     private String description;
 
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT") // 🔥 Uzun ingredients metni için
     private String ingredients;
 
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT") // 🔥 Uzun certifications metni için
     private String certifications;
+
+    @Column(columnDefinition = "TEXT") // 🔥 Uzun imageUrl için
+    private String imageUrl;
 
     @Column(nullable = false)
     private String status = "APPROVED"; // PENDING, APPROVED, REJECTED
@@ -44,7 +47,7 @@ public class Product {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    private String imageUrl;
+    private String imageSource; // "upload" veya "url"
 
     // Constructors
     public Product() {
@@ -52,7 +55,7 @@ public class Product {
 
     public Product(String name, String brand, String category, String subCategory, String description,
             String ingredients, String certifications, LocalDateTime createdAt,
-            LocalDateTime updatedAt, String imageUrl) {
+            LocalDateTime updatedAt, String imageUrl, String imageSource) {
         this.name = name;
         this.brand = brand;
         this.category = category;
@@ -63,6 +66,7 @@ public class Product {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.imageUrl = imageUrl;
+        this.imageSource = imageSource;
     }
 
     // PrePersist and PreUpdate for Timestamps (Optional)
@@ -195,6 +199,14 @@ public class Product {
         this.submittedByRepresentativeId = submittedByRepresentativeId;
     }
 
+     public String getImageSource() {
+        return imageSource;
+    }
+
+    public void setImageSource(String imageSource) {
+        this.imageSource = imageSource;
+    }
+
 
     @Override
     public String toString() {
@@ -212,6 +224,7 @@ public class Product {
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 ", imageUrl='" + imageUrl + '\'' +
+                ", imageSource='" + imageSource + '\'' +
                 '}';
     }
 }

@@ -18,8 +18,8 @@ public class BrandRepresentativeService {
     private final PasswordEncoder passwordEncoder;
 
     public BrandRepresentativeService(BrandRepresentativeRepository brandRepRepository,
-                                      UserRepository userRepository,
-                                      PasswordEncoder passwordEncoder) {
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder) {
         this.brandRepRepository = brandRepRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -104,5 +104,9 @@ public class BrandRepresentativeService {
             existing.setCountry(updated.getCountry());
             return brandRepRepository.save(existing);
         });
+    }
+
+    public void deleteRepresentative(Long id) {
+        brandRepRepository.deleteById(id);
     }
 }

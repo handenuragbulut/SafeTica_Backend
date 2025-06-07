@@ -280,6 +280,8 @@ public class AuthController {
         response.setPhoneNumber(user.getPhoneNumber());
         response.setBirthDate(user.getBirthDate() != null ? user.getBirthDate().toString() : null);
         response.setAuthProvider(user.getAuthProvider());
+        response.setPreferencesCompleted(user.isPreferencesCompleted());
+        response.setRole(user.getRole());
 
         return ResponseEntity.ok(response);
     }
