@@ -33,6 +33,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/google-login").permitAll()
+                        .requestMatchers("/api/contact").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/contact").permitAll()
                         .requestMatchers("/api/representatives/apply").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/representatives/apply").permitAll()
                         .requestMatchers("/api/ingredients/**").permitAll()
@@ -66,7 +68,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
 
                         // ✅ Temsilci dashboard işlemleri
-                        
 
                         // ✅ Temsilci ürün gönderme işlemleri (EKLENEN KURAL)
                         .requestMatchers("/api/representative/products/**").permitAll()
@@ -85,6 +86,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/representatives/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/products/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated());
 
         // 🔒 JwtFilter ekleniyor

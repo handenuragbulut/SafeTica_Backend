@@ -22,33 +22,28 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserService userService;
 
-    // ✅ Artık constructor ile ikisi birlikte alınacak
     public JwtFilter(JwtUtil jwtUtil, UserService userService) {
         this.jwtUtil = jwtUtil;
         this.userService = userService;
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
 
-        try {
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
                 String jwt = authHeader.substring(7);
                 String email = jwtUtil.getEmailFromToken(jwt);
-                String role = jwtUtil.getRoleFromToken(jwt); // ✅ Rolü alıyoruz
+                String role = jwtUtil.getRoleFromToken(jwt);
 
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     var userOptional = userService.findByEmail(email);
 
                     if (userOptional.isPresent()) {
                         var user = userOptional.get();
-
-                        // ✅ Role yetkisi ekleniyor
                         var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
                         var auth = new UsernamePasswordAuthenticationToken(
@@ -57,11 +52,11 @@ public class JwtFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     }
                 }
+            } catch (Exception e) {
+                System.out.println("JWT doğrulama hatası: " + e.getMessage());
             }
-        } catch (Exception e) {
-            System.out.println("JWT doğrulama hatası: " + e.getMessage());
         }
-
+        // 🌟 else bloğunu tamamen kaldır! Böylece Spring Security kontrolüne bırak
         filterChain.doFilter(request, response);
     }
 }
