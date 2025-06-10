@@ -64,6 +64,9 @@ public class SecurityConfig {
                         .permitAll()
                         // ✅ Kullanıcıya açık ürün listeleme ve detaylar
                         .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/products/scan").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/products/scan-ingredients").permitAll()
+
 
                         // ✅ Temsilci dashboard işlemleri
                         

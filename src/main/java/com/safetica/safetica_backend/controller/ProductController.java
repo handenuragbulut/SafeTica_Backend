@@ -5,9 +5,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.safetica.safetica_backend.entity.Product;
+import com.safetica.safetica_backend.entity.UserPreference;
 import com.safetica.safetica_backend.service.ProductService;
+import com.safetica.safetica_backend.service.UserPreferenceService;
+import com.safetica.safetica_backend.service.UserService;
+import com.safetica.safetica_backend.dto.ScanRequestDTO;
+import com.safetica.safetica_backend.dto.ScanResultDTO;
+import com.safetica.safetica_backend.util.JwtUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/products")
@@ -15,10 +24,18 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private UserPreferenceService userPreferenceService;
 
     // @GetMapping
     // public List<Product> getAllProducts() {
-    //     return productService.getAllProducts();
+    // return productService.getAllProducts();
     // }
 
     @GetMapping
@@ -93,6 +110,85 @@ public class ProductController {
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product updatedProduct) {
         return productService.updateProduct(id, updatedProduct)
                 .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/scan")
+    public ResponseEntity<ScanResultDTO> scanProductAndCheckAllergies(
+            @RequestBody ScanRequestDTO scanRequest,
+            HttpServletRequest request) {
+        String token = jwtUtil.extractTokenFromRequest(request);
+        String email = jwtUtil.getEmailFromToken(token);
+
+        return userService.findByEmail(email)
+                .map(user -> {
+                    ScanResultDTO result = productService.scanProductAndCheckAllergies(
+                            scanRequest.getText(), user.getId());
+                    return ResponseEntity.ok(result);
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/scan-ingredients")
+    public ResponseEntity<ScanResultDTO> scanIngredientsAndCheckAllergies(
+            @RequestBody ScanRequestDTO scanRequest,
+            HttpServletRequest request) {
+
+        String token = jwtUtil.extractTokenFromRequest(request);
+        String email = jwtUtil.getEmailFromToken(token);
+
+        return userService.findByEmail(email)
+                .map(user -> {
+                    List<String> userAllergies = userPreferenceService.getPreferences(user.getId()).getAllergies();
+                    List<String> matchedAllergies = userAllergies.stream()
+                            .filter(allergy -> scanRequest.getText().toLowerCase().contains(allergy.toLowerCase()))
+                            .collect(Collectors.toList());
+
+                    ScanResultDTO result = new ScanResultDTO();
+                    result.setMatchedAllergies(matchedAllergies);
+                    return ResponseEntity.ok(result);
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/scan-ingredients-with-excludes")
+    public ResponseEntity<ScanResultDTO> scanIngredientsAndCheckAllergiesAndExcludes(
+            @RequestBody ScanRequestDTO scanRequest,
+            HttpServletRequest request) {
+
+        String token = jwtUtil.extractTokenFromRequest(request);
+        String email = jwtUtil.getEmailFromToken(token);
+
+        return userService.findByEmail(email)
+                .map(user -> {
+                    // 1️⃣ Kullanıcının alerji ve istenmeyen içerik listelerini çek
+                    List<String> userAllergies = userPreferenceService.getPreferences(user.getId()).getAllergies();
+                    List<String> userExcludes = userPreferenceService.getPreferences(user.getId())
+                            .getExcludedIngredients();
+
+                    // 2️⃣ Alerji eşleşmeleri
+                    List<String> matchedAllergies = null;
+                    if (userAllergies != null) {
+                        matchedAllergies = userAllergies.stream()
+                                .filter(allergy -> scanRequest.getText().toLowerCase().contains(allergy.toLowerCase()))
+                                .collect(Collectors.toList());
+                    }
+
+                    // 3️⃣ İstenmeyen içerik eşleşmeleri
+                    List<String> matchedExcludes = null;
+                    if (userExcludes != null) {
+                        matchedExcludes = userExcludes.stream()
+                                .filter(exclude -> scanRequest.getText().toLowerCase().contains(exclude.toLowerCase()))
+                                .collect(Collectors.toList());
+                    }
+
+                    // 4️⃣ DTO hazırla
+                    ScanResultDTO result = new ScanResultDTO();
+                    result.setMatchedAllergies(matchedAllergies);
+                    result.setMatchedExcludedIngredients(matchedExcludes);
+
+                    return ResponseEntity.ok(result);
+                })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
