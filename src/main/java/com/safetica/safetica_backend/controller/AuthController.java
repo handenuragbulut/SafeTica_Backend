@@ -7,6 +7,7 @@ import com.safetica.safetica_backend.dto.GoogleLoginRequest;
 import com.safetica.safetica_backend.dto.GoogleUser;
 import com.safetica.safetica_backend.dto.UserUpdateRequest;
 import com.safetica.safetica_backend.entity.User;
+import com.safetica.safetica_backend.service.EmailService;
 import com.safetica.safetica_backend.service.GoogleAuthService;
 import com.safetica.safetica_backend.service.UserService;
 
@@ -32,6 +33,9 @@ public class AuthController {
 
     @Autowired
     private GoogleAuthService googleAuthService;
+
+    @Autowired
+    private EmailService emailService;
 
     @Autowired
     private com.safetica.safetica_backend.util.JwtUtil jwtUtil;
@@ -165,46 +169,49 @@ public class AuthController {
      * Kullanıcı kayıt
      */
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
         try {
-            if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
+            if (!request.getPassword().equals(request.getConfirmPassword())) {
                 return ResponseEntity.badRequest().body("Passwords do not match!");
             }
 
-            if (registerRequest.getFirstName() == null || registerRequest.getFirstName().isEmpty()) {
+            if (request.getFirstName() == null || request.getFirstName().isEmpty()) {
                 return ResponseEntity.badRequest().body("First name is required.");
             }
-            if (registerRequest.getLastName() == null || registerRequest.getLastName().isEmpty()) {
+            if (request.getLastName() == null || request.getLastName().isEmpty()) {
                 return ResponseEntity.badRequest().body("Last name is required.");
             }
-            if (registerRequest.getEmail() == null || registerRequest.getEmail().isEmpty()) {
+            if (request.getEmail() == null || request.getEmail().isEmpty()) {
                 return ResponseEntity.badRequest().body("Email is required.");
             }
-            if (registerRequest.getBirthDate() == null) {
+            if (request.getBirthDate() == null) {
                 return ResponseEntity.badRequest().body("Birth date is required.");
             }
-            if (registerRequest.getCountry() == null || registerRequest.getCountry().isEmpty()) {
+            if (request.getCountry() == null || request.getCountry().isEmpty()) {
                 return ResponseEntity.badRequest().body("Country is required.");
             }
-            if (!registerRequest.isTermsAccepted()) {
+            if (!request.isTermsAccepted()) {
                 return ResponseEntity.badRequest().body("Terms must be accepted.");
             }
 
             User user = new User();
-            user.setFirstName(registerRequest.getFirstName());
-            user.setLastName(registerRequest.getLastName());
-            user.setEmail(registerRequest.getEmail());
-            user.setPasswordHash(passwordEncoder.encode(registerRequest.getPassword()));
-            user.setBirthDate((LocalDate) registerRequest.getBirthDate());
-            user.setPhoneNumber(registerRequest.getPhoneNumber());
-            user.setCountry(registerRequest.getCountry());
+            user.setEmail(request.getEmail());
+            user.setFirstName(request.getFirstName());
+            user.setLastName(request.getLastName());
+            user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+            user.setBirthDate((LocalDate) request.getBirthDate());
+            user.setPhoneNumber(request.getPhoneNumber());
+            user.setCountry(request.getCountry());
             user.setAuthProvider("email");
-            user.setTermsAccepted(registerRequest.isTermsAccepted());
+            user.setTermsAccepted(request.isTermsAccepted());
             user.setCreatedAt(LocalDateTime.now());
-            user.setActive(true);
+            user.setActive(false);
             user.setRole("USER");
-
+            // 🟩 4) Rastgele 6 haneli doğrulama kodu oluştur
+            String verificationCode = String.format("%06d", (int)(Math.random() * 1000000));
+            user.setVerificationCode(verificationCode);            
             userService.saveUser(user);
+            emailService.sendVerificationEmail(user.getEmail(), verificationCode);
             return ResponseEntity.ok("Registration successful!");
         } catch (Exception e) {
             e.printStackTrace();
@@ -212,6 +219,16 @@ public class AuthController {
                     .body("Registration failed: " + e.getMessage());
         }
     }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<String> verifyEmail(@RequestParam String email, @RequestParam String code) {
+        boolean verified = userService.verifyEmail(email, code);
+        if (verified) {
+            return ResponseEntity.ok("Email doğrulandı!");
+        } else {
+            return ResponseEntity.badRequest().body("Doğrulama kodu hatalı.");
+        }
+    }   
 
     /**
      * Google ile giriş

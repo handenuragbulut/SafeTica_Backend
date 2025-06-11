@@ -4,12 +4,15 @@ import com.safetica.safetica_backend.dto.UserResponse;
 import com.safetica.safetica_backend.entity.User;
 import com.safetica.safetica_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,6 +24,10 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
+    @Autowired
+    private PasswordEncoder passwordEncoder; 
+     @Autowired
+    private EmailService emailService; 
     // Method to hash passwords
     public String getPasswordHash(String plainPassword) {
         return BCrypt.hashpw(plainPassword, BCrypt.gensalt());
@@ -30,6 +37,41 @@ public class UserService {
     public void saveUser(User user) {
         userRepository.save(user);
     }
+    public User registerUser(String email, String password) {
+        User user = new User();
+        user.setEmail(email);
+
+        // Şifreyi hash’le
+        user.setPassword(passwordEncoder.encode(password));
+
+        // Kullanıcı aktif değil
+        user.setActive(false);
+
+        // 6 haneli basit bir doğrulama kodu (OTP)
+        String verificationCode = String.format("%06d", (int)(Math.random() * 1000000));
+        user.setVerificationCode(verificationCode);
+
+         // Kullanıcıyı kaydet
+        userRepository.save(user);
+
+        // Email gönder
+        emailService.sendVerificationEmail(email, verificationCode);
+
+        return user;
+    }  
+    public boolean verifyEmail(String email, String code) {
+    Optional<User> optionalUser = userRepository.findByEmail(email);
+    if (optionalUser.isPresent()) {
+        User user = optionalUser.get();
+        if (user.getVerificationCode().equals(code)) {
+            user.setActive(true);
+            user.setVerificationCode(null); // kodu sıfırla
+            userRepository.save(user);
+            return true;
+        }
+    }
+    return false;
+}
 
     // Authenticate user by comparing hashed passwords
     public boolean authenticate(String email, String password) {
@@ -39,6 +81,8 @@ public class UserService {
         }
         return false;
     }
+    
+    
 
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);

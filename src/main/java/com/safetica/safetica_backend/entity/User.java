@@ -52,9 +52,23 @@ public class User {
 
     @Column(nullable = false)
     private boolean active = true; // varsayılan aktif
+    
+    @Column(name = "verification_code")
+    private String verificationCode; // OTP (tek kullanımlık e-posta kodu)
+
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
+    }
 
     @Column(name = "preferences_survey_completed", nullable = false)
     private boolean preferencesCompleted = false; // Yeni kullanıcılar için varsayılan false
+
+    @Column(name = "password")
+    private String password;
 
     // Getters and Setters
     public Long getId() {
@@ -91,6 +105,17 @@ public class User {
 
     public String getPasswordHash() {
         return passwordHash;
+    }
+    
+
+    public String getPassword() 
+    {
+        return password;
+    }
+
+    public void setPassword(String password) 
+    {
+        this.password = password;
     }
 
     public void setPasswordHash(String passwordHash) {
