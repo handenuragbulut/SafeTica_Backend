@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers( "/api/auth/verify-email").permitAll()
                         .requestMatchers("/api/google-login").permitAll()
                         .requestMatchers("/api/contact").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/contact").permitAll()
