@@ -220,7 +220,7 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/verify-email")
+    @GetMapping("/verify-email")
     public ResponseEntity<String> verifyEmail(@RequestParam String email, @RequestParam String code) {
         boolean verified = userService.verifyEmail(email, code);
         if (verified) {
